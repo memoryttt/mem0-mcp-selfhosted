@@ -31,6 +31,14 @@ _last_init_failure: float = 0.0
 _INIT_RETRY_COOLDOWN = 30.0
 
 
+def _update_memory_preserving_metadata(mem: Any, memory_id: str, text: str) -> dict[str, str]:
+    """Update memory text while preserving existing metadata."""
+    existing = mem.get(memory_id)
+    existing_metadata = existing.get("metadata") if isinstance(existing, dict) else None
+    mem.update(memory_id, data=text, metadata=existing_metadata)
+    return {"message": "Memory updated successfully!"}
+
+
 def _init_memory() -> Any:
     """Initialize mem0ai Memory from environment config."""
     global memory
@@ -209,8 +217,7 @@ def _register_tools(mcp: FastMCP) -> None:
             return _memory_not_ready()
 
         def _do_update() -> dict[str, str]:
-            mem.update(memory_id, data=text)
-            return {"message": "Memory updated successfully!"}
+            return _update_memory_preserving_metadata(mem, memory_id, text)
 
         return _mem0_call(_do_update)
 
