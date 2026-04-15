@@ -33,6 +33,15 @@ def test_build_config_uses_openai_compatible_providers(monkeypatch):
     assert config["vector_store"]["config"]["embedding_model_dims"] == 1024
 
 
+def test_build_config_accepts_siliconflow_api_key_alias(monkeypatch):
+    monkeypatch.delenv("EMBEDDING_API_KEY", raising=False)
+    monkeypatch.setenv("SILICONFLOW_API_KEY", "sf-key")
+
+    config = build_config()
+
+    assert config["embedder"]["config"]["api_key"] == "sf-key"
+
+
 def test_build_config_rejects_graph_mode(monkeypatch):
     monkeypatch.setenv("MEM0_ENABLE_GRAPH", "true")
 

@@ -7,16 +7,29 @@ from typing import Any
 from mem0_mcp_selfhosted.env import bool_env, env, opt_env
 
 
+def _resolve_api_key(primary_env: str, *alias_envs: str) -> str:
+    """Resolve an API key from a primary env var plus optional aliases."""
+    for key in (primary_env, *alias_envs):
+        value = opt_env(key)
+        if value:
+            return value
+    raise ValueError(
+        f"Missing required environment variable: {primary_env}"
+        + (f" (aliases: {', '.join(alias_envs)})" if alias_envs else "")
+    )
+
+
 def _build_openai_config(
     *,
     api_key_env: str,
+    api_key_aliases: tuple[str, ...] = (),
     base_url_env: str,
     model_env: str,
     default_base_url: str,
     default_model: str,
 ) -> dict[str, Any]:
     return {
-        "api_key": env(api_key_env),
+        "api_key": _resolve_api_key(api_key_env, *api_key_aliases),
         "openai_base_url": env(base_url_env, default_base_url),
         "model": env(model_env, default_model),
     }
@@ -73,6 +86,7 @@ def build_config() -> dict[str, Any]:
             "provider": "openai",
             "config": _build_openai_config(
                 api_key_env="EMBEDDING_API_KEY",
+                api_key_aliases=("SILICONFLOW_API_KEY",),
                 base_url_env="EMBEDDING_BASE_URL",
                 model_env="EMBEDDING_MODEL",
                 default_base_url="https://api.siliconflow.cn/v1",
